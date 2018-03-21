@@ -1,0 +1,1 @@
+PawsGetDynamoTableJsonData.pl : Makes JSON backUp of Dynamo DB table given. 
