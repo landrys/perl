@@ -79,16 +79,35 @@ sub queryManagerEmail {
 	my $self = shift;
 	my $storeMgr = shift;
 	my $email;
+        my $storeManagersIdList;
+        
+        # First get the list of ids from the config table;
 	my $statement = 
 		$self->mysql->prepare(
-				'select concat(first_name," ",last_name) as name,email from config c join staff s on s.id=c.value where c.name="' . $storeMgr . '"');
+				'select value from config where name="' . $storeMgr . '"');
+	$statement->execute();
+        while(my $ref = $statement->fetchrow_hashref) {
+            $storeManagersIdList =  $ref->{value};
+            last;
+        }
+
+        $statement->finish();
+
+        # Next get the emails from the staff table;
+	$statement = 
+		$self->mysql->prepare(
+				'select email from staff where id in (' . $storeManagersIdList . ')');
 
 	$statement->execute();
 
 	while(my $ref = $statement->fetchrow_hashref) {
-		$email =  $ref->{email};
-		last;
+            if ( defined $email ) {
+           	$email = $email . ',' . $ref->{email};
+            } else {
+           	$email =  $ref->{email};
+            }
 	}
+
 	$statement->finish();
 	return $email;
 }
